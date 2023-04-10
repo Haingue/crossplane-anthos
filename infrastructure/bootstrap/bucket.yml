@@ -1,0 +1,13 @@
+apiVersion: storage.gcp.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: example2
+  annotations:
+    crossplane.io/external-name: example2-bucket
+spec:
+  forProvider:
+    location: US-CENTRAL1
+    storageClass: REGIONAL
+  providerConfigRef:
+    name: crossplane-anthos
+  deletionPolicy: Delete
