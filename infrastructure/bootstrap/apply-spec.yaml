@@ -12,5 +12,5 @@ spec:
     syncRepo: https://gitlab.com/musk8teers/crossplane-anthos.git
     syncBranch: main
     secretType: token
-    policyDir: infrastructure/anthos-config/root
+    policyDir: infrastructure/anthos-config
     preventDrift: false
