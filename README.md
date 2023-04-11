@@ -18,6 +18,7 @@ gcloud config set core/project crossplane-anthos
 export GCP_ZONE=us-central1-a
 export GCP_REGION=us-central1
 export GCP_PROJECT_ID=`gcloud config get-value core/project`
+export GCP_PROJECT_NUMBER=`gcloud projects describe ${GCP_PROJECT_ID} --format json | jq --raw-output '.projectNumber'`
 ```
 
 ### Création d'un service account GCP
@@ -42,8 +43,7 @@ gcloud projects add-iam-policy-binding --role="roles/iam.serviceAccountUser" ${G
 gcloud projects add-iam-policy-binding --role="roles/compute.instanceAdmin.v1" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
 # role for GKE cluster registration into an Anthos fleet
 gcloud projects add-iam-policy-binding --role="roles/gkehub.admin" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
-# role for Cloud Source Repositories creation
-gcl```
+```
 
 On génère une clé secrète pour ce *service account*.
 
@@ -51,12 +51,12 @@ On génère une clé secrète pour ce *service account*.
 gcloud iam service-accounts keys create service_account_credentials.json --project ${GCP_PROJECT_ID} --iam-account ${GCP_SERVICE_ACCOUNT}
 ```
 
-On créé un secret dans K8s pour stocker la clé du *service account* GCP.
+On créé un *secret* dans `K8s` pour stocker la clé du *service account* `GCP`.
 
 ```bash
 kubectl create secret generic gcp-service-account-credentials \
     --namespace="crossplane-system" \
-    --from-file=file-content=./.credentials/service_account_credentials.json
+    --from-file=file-content=${HOME}/crossplane-anthos/.credentials/service_account_credentials.json
 ```
 
 ## Enable GKE API
@@ -91,17 +91,17 @@ curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.
 Avec `CrossPlane`, on va provisionner une 1èreressource `GCP` : un simple *bucket* `Google Cloud Storage` en chargeant les *manifests* `CrossPlane` dans `minikube`.  
 
 ```bash
-cd infrastructure/bootstrap
+cd ${HOME}/crossplane-anthos/infrastructure/bootstrap
 
 # Installation des providers GCP
-kubectl apply -f ./providers.yml
+kubectl apply -f ./providers.yaml
 kubectl get providers -w
 
 # Installation de la configuration du provider GCP avec fourniture du secret
-kubectl apply -f ./provider-config.yml
+kubectl apply -f ./provider-config.yaml
 
 # Déploiement du bucket
-kubectl apply -f ./bucket.yml
+kubectl apply -f ./bucket.yaml
 ```
 
 # Bootstrap de la `Anthos` *fleet* avec un 1er *cluster* `GKE`
@@ -110,7 +110,7 @@ On provisionne un 1er *cluster* `GKE` que l'on enregistre à la `Anthos` *fleet*
 
 ```bash
 # Déploiement du cluster GKE et enregistrement dans la Anthos fleet
-kubectl apply -f gke.yml
+kubectl apply -f gke-cluster-1.yaml
 kubectl get cluster.container.gcp.upbound.io -w
 
 gcloud container hub memberships list
@@ -123,7 +123,7 @@ Côté Gitlab, on crée un *personal access token*… que l'on stocke dans un *s
 
 ```bash
 # On configure kubectl pour qu'il s'adresse à notre cluster GKE
-gcloud container clusters get-credentials anthos-gke --zone ${GCP_ZONE}
+gcloud container clusters get-credentials anthos-gke-cluster-1 --zone ${GCP_ZONE}
 kubectl config get-contexts
 kubectl config use-context gke_crossplane-anthos_us-central1-a_anthos-gke
 kubectl get nodes
@@ -134,15 +134,15 @@ kubectl create ns config-management-system
 kubectl create secret generic git-creds \
   --namespace="config-management-system" \
   --from-literal=username=ludovic-piot \
-  --from-literal=token=$(cat .credentials/gitlab-access-token)
+  --from-literal=token=$(cat ${HOME}/crossplane-anthos/.credentials/gitlab-access-token)
 ```
 
 
 ```bash
 # On configure la source de vérité de Config-Sync depuis le dépôt git Source Repository
-cd
+cd ${HOME}
 gcloud beta container fleet config-management apply                       \
-      --membership=anthos-gke                                             \
+      --membership=anthos-gke-cluster-1                                   \
       --config=crossplane-anthos/infrastructure/bootstrap/apply-spec.yaml \
       --project=crossplane-anthos
 
