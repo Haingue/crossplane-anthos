@@ -1,9 +1,9 @@
 apiVersion: storage.gcp.upbound.io/v1beta1
 kind: Bucket
 metadata:
-  name: example
+  name: simplebucket
   annotations:
-    crossplane.io/external-name: example-bucket
+    crossplane.io/external-name: simplebucket-bucket
 spec:
   forProvider:
     location: US-CENTRAL1
