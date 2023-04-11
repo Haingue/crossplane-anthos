@@ -59,6 +59,7 @@ kubectl create secret generic gcp-service-account-credentials -n crossplane-syst
 
 ## Enable GKE API
 
+🚧 TBD
 
 ## Installation de CrossPlane
 
@@ -83,6 +84,78 @@ On installe la CLI `CrossPlane` (il s'agit d'un plugin à `kubectl`).
 curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
 ```
 
+# 1er provisionning de ressource `GCP` avec `CrossPlane`
+
+Avec `CrossPlane`, on va provisionner une 1èreressource `GCP` : un simple *bucket* `Google Cloud Storage` en chargeant les *manifests* `CrossPlane` dans `minikube`.  
+
+```bash
+cd infrastructure/bootstrap
+
+# Installation des providers GCP
+kubectl apply -f ./providers.yml
+kubectl get providers -w
+
+# Installation de la configuration du provider GCP avec fourniture du secret
+kubectl apply -f ./provider-config.yml
+
+# Déploiement du bucket
+kubectl apply -f ./bucket.yml
+```
+
+# Bootstrap de la `Anthos` *fleet* avec un 1er *cluster* `GKE`
+
+On provisionne un 1er *cluster* `GKE` que l'on enregistre à la `Anthos` *fleet*.
+
+```bash
+# Déploiement du cluster GKE et enregistrement dans la Anthos fleet
+kubectl apply -f gke.yml
+kubectl get cluster.container.gcp.upbound.io -w
+
+gcloud container hub memberships list
+gcloud container fleet features list
+```
+
+Pour que ce *cluster* puisse s'auto-configurer, on a besoin de fournir une source de configuration *GitOps* à l'outil `Anthos Config Management` (`Config-Sync`).  
+Pour cela, on va créer un dépôt `Git` dans le service dédié dans `GCP` : `Source Repositories`.  
+
+```bash
+# Déploiement du dépôt git anthos-config
+kubectl apply -f source.yaml
+
+cd
+gcloud source repos clone anthos-config --project=crossplane-anthos
+cp -pr crossplane-anthos/infrastructure/anthos-config/root anthos-config/
+cd anthos-config
+git add *
+git commit -m':tada:'
+git push -u master
+```
+
+```bash
+# On configure kubectl pour qu'il s'adresse à notre cluster GKE
+gcloud container clusters get-credentials anthos-gke
+kubectl get nodes
+
+```
+
+```bash
+gcloud projects add-iam-policy-binding crossplane-anthos \
+--member serviceAccount:967176715448-compute@developer.gserviceaccount.com \
+--role roles/source.reader
+```
+
+```bash
+# On configure la source de vérité de Config-Sync depuis le dépôt git Source Repository
+cd
+gcloud beta container fleet config-management apply                       \
+      --membership=anthos-gke                                             \
+      --config=crossplane-anthos/infrastructure/bootstrap/apply-spec.yaml \
+      --project=crossplane-anthos
+
+
+gcloud beta container fleet config-management status \
+    --project=crossplane-anthos
+```
 
 
 # Sources
