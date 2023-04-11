@@ -54,7 +54,9 @@ gcloud iam service-accounts keys create service_account_credentials.json --proje
 On créé un secret dans K8s pour stocker la clé du *service account* GCP.
 
 ```bash
-kubectl create secret generic gcp-service-account-credentials -n crossplane-system --from-file=file-content=./.credentials/service_account_credentials.json
+kubectl create secret generic gcp-service-account-credentials \
+    --namespace="crossplane-system" \
+    --from-file=file-content=./.credentials/service_account_credentials.json
 ```
 
 ## Enable GKE API
@@ -116,33 +118,25 @@ gcloud container fleet features list
 ```
 
 Pour que ce *cluster* puisse s'auto-configurer, on a besoin de fournir une source de configuration *GitOps* à l'outil `Anthos Config Management` (`Config-Sync`).  
-Pour cela, on va créer un dépôt `Git` dans le service dédié dans `GCP` : `Source Repositories`.  
-
-```bash
-# Déploiement du dépôt git anthos-config
-kubectl apply -f source.yaml
-
-cd
-gcloud source repos clone anthos-config --project=crossplane-anthos
-cp -pr crossplane-anthos/infrastructure/anthos-config/root anthos-config/
-cd anthos-config
-git add *
-git commit -m':tada:'
-git push -u master
-```
+Pour cela, on va utiliser le dossier `anthos-config` de notre dépôt `Git`.  
+Côté Gitlab, on crée un *personal access token*… que l'on stocke dans un *secret* sur le cluster `GKE`.  
 
 ```bash
 # On configure kubectl pour qu'il s'adresse à notre cluster GKE
-gcloud container clusters get-credentials anthos-gke
+gcloud container clusters get-credentials anthos-gke --zone ${GCP_ZONE}
+kubectl config get-contexts
+kubectl config use-context gke_crossplane-anthos_us-central1-a_anthos-gke
 kubectl get nodes
-
 ```
 
 ```bash
-gcloud projects add-iam-policy-binding crossplane-anthos \
---member serviceAccount:967176715448-compute@developer.gserviceaccount.com \
---role roles/source.reader
+kubectl create ns config-management-system
+kubectl create secret generic git-creds \
+  --namespace="config-management-system" \
+  --from-literal=username=ludovic-piot \
+  --from-literal=token=$(cat .credentials/gitlab-access-token)
 ```
+
 
 ```bash
 # On configure la source de vérité de Config-Sync depuis le dépôt git Source Repository
