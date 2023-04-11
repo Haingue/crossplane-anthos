@@ -1,0 +1,17 @@
+# apply-spec.yaml
+
+applySpecVersion: 1
+spec:
+  configSync:
+    # Set to true to install and enable Config Sync
+    enabled: true
+    # If you don't have a source of truth yet, omit the
+    # following fields. You can configure them later.
+    sourceType: git
+    sourceFormat: unstructured
+    syncRepo: https://source.developers.google.com/p/crossplane-anthos/r/anthos-config
+    syncBranch: MASTER
+    secretType: gcenode
+    gcpServiceAccountEmail: crossplane-anthos-sa@crossplane-anthos.iam.gserviceaccount.com
+    policyDir: /root
+    preventDrift: false
