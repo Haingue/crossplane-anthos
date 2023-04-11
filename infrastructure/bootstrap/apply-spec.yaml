@@ -9,9 +9,8 @@ spec:
     # following fields. You can configure them later.
     sourceType: git
     sourceFormat: unstructured
-    syncRepo: https://source.developers.google.com/p/crossplane-anthos/r/anthos-config
-    syncBranch: MASTER
-    secretType: gcenode
-    gcpServiceAccountEmail: crossplane-anthos-sa@crossplane-anthos.iam.gserviceaccount.com
-    policyDir: /root
+    syncRepo: https://gitlab.com/musk8teers/crossplane-anthos.git
+    syncBranch: main
+    secretType: token
+    policyDir: infrastructure/anthos-config/root
     preventDrift: false
