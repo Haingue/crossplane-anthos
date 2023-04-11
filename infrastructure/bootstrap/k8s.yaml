@@ -1,0 +1,20 @@
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: k8s-cluster
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.7.0
+
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: k8s-cluster
+spec:
+  credentials:
+    secretRef:
+      key: kubeconfig
+      name: k8s-credentials
+      namespace: crossplane-system
+    source: Secret
