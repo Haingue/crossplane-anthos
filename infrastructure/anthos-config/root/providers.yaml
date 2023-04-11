@@ -1,0 +1,18 @@
+# You better choose the UpBound provider since it has +300 managed resources compared to the +20 managed resources community provider
+
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-gcp
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0
+
+---
+# Install manifest for Upbound.io GCP provider
+# see install manifest here. https://marketplace.upbound.io/providers/upbound/provider-gcp/v0.30.0
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-gcp
+spec:
+  package: xpkg.upbound.io/upbound/provider-gcp:v0.30.0

@@ -1,0 +1,17 @@
+# Configuration of the provider, including passing service account key file via a K8s secret
+# see resource documentation here. https://marketplace.upbound.io/providers/upbound/provider-gcp/v0.30.0/resources/gcp.upbound.io/ProviderConfig/v1beta1
+
+# WARNING: provider should already be installed BEFORE applying this resource
+
+apiVersion: gcp.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: crossplane-anthos
+spec:
+  credentials:
+    secretRef:
+      key: file-content
+      name: gcp-service-account-credentials
+      namespace: crossplane-system
+    source: Secret
+  projectID: crossplane-anthos

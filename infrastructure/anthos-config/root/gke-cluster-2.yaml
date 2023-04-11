@@ -1,0 +1,31 @@
+apiVersion: container.gcp.upbound.io/v1beta1
+kind: Cluster
+metadata:
+  name: anthos-gke-2
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    initialNodeCount: 2
+    location: us-central1-a
+    nodeConfig:
+      - machineType: e2-medium
+  providerConfigRef:
+    name: crossplane-anthos
+
+---
+apiVersion: gkehub.gcp.upbound.io/v1beta1
+kind: Membership
+metadata:
+  annotations:
+    meta.upbound.io/example-id: gkehub/v1beta1/membership
+  labels:
+    testing.upbound.io/example-name: membership
+  name: anthos-gke-2
+spec:
+  forProvider:
+    endpoint:
+      - gkeCluster:
+          - resourceLinkRef:
+              name: anthos-gke-2
+  providerConfigRef:
+    name: crossplane-anthos
