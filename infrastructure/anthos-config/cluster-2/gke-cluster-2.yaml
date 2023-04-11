@@ -8,7 +8,7 @@ spec:
     initialNodeCount: 2
     location: us-central1-a
     nodeConfig:
-      - machineType: e2-medium
+      - machineType: e2-standard-2
   providerConfigRef:
     name: crossplane-anthos
 
