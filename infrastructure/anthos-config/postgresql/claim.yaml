@@ -1,0 +1,12 @@
+apiVersion: database.wk/v1alpha1
+kind: JetPostgreSQL
+metadata:
+  namespace: test-namespace
+  name: jet-db-claim
+spec:
+  parameters:
+    storageGB: 25
+    dbName: xrdb
+    instanceSize: small # small, medium, large
+  writeConnectionSecretToRef:
+    name: jet-db-claim-details
