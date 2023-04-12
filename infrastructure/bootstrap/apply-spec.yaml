@@ -10,7 +10,7 @@ spec:
     sourceType: git
     sourceFormat: unstructured
     syncRepo: https://gitlab.com/musk8teers/crossplane-anthos.git
-    syncBranch: main
+    syncBranch: config-sync-0
     secretType: token
     policyDir: infrastructure/anthos-config
     preventDrift: false
