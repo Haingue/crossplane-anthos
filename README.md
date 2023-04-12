@@ -1,8 +1,10 @@
 # crossplane-anthos
-
-## Source
-Workshop devoxx pour nous présenter Crossplane et Anthos.
+Ressource d'un workshop de Devoxx pour nous présenter Crossplane et Anthos.<br/>
 GitLab: https://gitlab.com/musk8teers/crossplane-anthos/
+
+## Speaker
+[Ludovic Piot](https://gitlab.com/ludovic-piot)
+
 
 ## Provisionning du 1er *cluster* `Anthos` depuis `CrossPlane`
 
