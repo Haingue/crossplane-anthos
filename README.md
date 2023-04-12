@@ -2,14 +2,17 @@
 
 
 
-## Démarrage de Minikube
+## Provisionning du 1er *cluster* `Anthos` depuis `CrossPlane`
 
+### Démarrage de `Minikube`
+
+:warning: `CrossPlane` est assez gourmand en ressources. À moins de 4 Go de RAM, `Minikube` s'avère instable.
+
+```bash
 minikube start
 kubectl get nodes
 kubectl get namespaces
-
-
-## Prérequis
+```
 
 ### Poser des variables d'environnement
 
@@ -21,7 +24,7 @@ export GCP_PROJECT_ID=`gcloud config get-value core/project`
 export GCP_PROJECT_NUMBER=`gcloud projects describe ${GCP_PROJECT_ID} --format json | jq --raw-output '.projectNumber'`
 ```
 
-### Création d'un service account GCP
+### Création d'un service account `GCP`
 
 On créé un *service account*, qui sera utilisé par les outils d'*Infra-as-Code*.
 
@@ -41,8 +44,10 @@ gcloud projects add-iam-policy-binding --role="roles/storage.admin" ${GCP_PROJEC
 gcloud projects add-iam-policy-binding --role="roles/container.clusterAdmin" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
 gcloud projects add-iam-policy-binding --role="roles/iam.serviceAccountUser" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
 gcloud projects add-iam-policy-binding --role="roles/compute.instanceAdmin.v1" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
+
 # role for GKE cluster registration into an Anthos fleet
 gcloud projects add-iam-policy-binding --role="roles/gkehub.admin" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
+
 # role for Cloud SQL creation
 gcloud projects add-iam-policy-binding --role="roles/cloudsql.admin" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
 ```
@@ -61,39 +66,42 @@ kubectl create secret generic gcp-service-account-credentials \
     --from-file=file-content=${HOME}/crossplane-anthos/.credentials/service_account_credentials.json
 ```
 
-## Enable GKE API
+### Enable `GCP` *API*
 
 🚧 TBD
 
-## Installation de CrossPlane
+### Installation de `CrossPlane` dans `MiniKube`
 
-On installe crossplane via `Helm`.
+On installe `CrossPlane` via `Helm`.
+
 ```bash
 kubectl create namespace crossplane-system
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 helm repo update
 helm install crossplane --namespace crossplane-system crossplane-stable/crossplane
-```
 
-On vérifie que tout a été installé correctement.
-
-```bash
+# On vérifie que tout a été installé correctement.
 helm list -n crossplane-system
 kubectl get all -n crossplane-system
 ```
 
-On installe la CLI `CrossPlane` (il s'agit d'un plugin à `kubectl`).
+On installe la *CLI* `CrossPlane` (il s'agit d'un plugin à `kubectl`).
 
 ```bash
 curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
 sudo mv kubectl-crossplane /home/ludovic_piot/.local/bin
 kubectl crossplane --help
+```
 
+### Visualisation des resources créées par CrossPlane
+
+```bash
+kubectl get crossplane
 ```
 
 # 1er provisionning de ressource `GCP` avec `CrossPlane`
 
-Avec `CrossPlane`, on va provisionner une 1èreressource `GCP` : un simple *bucket* `Google Cloud Storage` en chargeant les *manifests* `CrossPlane` dans `minikube`.  
+Avec `CrossPlane`, on va provisionner une 1ère ressource `GCP` : un simple *bucket* `Google Cloud Storage` en chargeant les *manifests* `CrossPlane` dans `Minikube`.  
 
 ```bash
 cd ${HOME}/crossplane-anthos/infrastructure/bootstrap
@@ -109,7 +117,7 @@ kubectl apply -f ./provider-config.yaml
 kubectl apply -f ./bucket.yaml
 ```
 
-# Bootstrap de la `Anthos` *fleet* avec un 1er *cluster* `GKE`
+### *Bootstrap* de la `Anthos` *fleet* avec un 1er *cluster* `GKE`
 
 On provisionne un 1er *cluster* `GKE` que l'on enregistre à la `Anthos` *fleet*.
 
@@ -130,7 +138,6 @@ Côté Gitlab, on crée un *personal access token*… que l'on stocke dans un *s
 # On configure kubectl pour qu'il s'adresse à notre cluster GKE
 gcloud container clusters get-credentials anthos-gke-cluster-1 --zone ${GCP_ZONE}
 kubectl config get-contexts
-kubectl config use-context gke_crossplane-anthos_us-central1-a_anthos-gke
 kubectl get nodes
 ```
 
@@ -142,9 +149,9 @@ kubectl create secret generic git-creds \
   --from-literal=token=$(cat ${HOME}/crossplane-anthos/.credentials/gitlab-access-token)
 ```
 
+On configure la source de vérité de `Config-Sync` depuis le dépôt `Gitlab`
 
 ```bash
-# On configure la source de vérité de Config-Sync depuis le dépôt git Source Repository
 cd ${HOME}
 gcloud beta container fleet config-management apply                       \
       --membership=anthos-gke-cluster-1                                   \
@@ -162,6 +169,7 @@ gcloud beta container fleet config-management status \
 - Google Kubernetes Engine with Crossplane - https://ce.qwiklabs.com/classrooms/9396/labs/65084
 - Une explication de la cinématique GitOps avec Anthos, Crossplane et ArgoCD -  https://medium.com/@vincn.ledan/construisez-une-plateforme-moderne-avec-crossplane-anthos-et-argocd-lavenir-de-la-gestion-a73e8631afd8
 - https://www.googlecloudcommunity.com/gc/Cloud-Events/Managing-multicloud-deployments-with-Anthos-and-Crossplane/ec-p/495591
+- CrossPlane XRD and Composition - https://prune998.medium.com/playing-with-crossplane-for-real-f591e66065ae
 
 
 ## Installation de krew
@@ -172,7 +180,4 @@ https://krew.sigs.k8s.io/docs/user-guide/setup/install/
 
 https://github.com/corneliusweig/ketall
 
-## Visualisation des resources créées par CrossPlane
-
-kubectl get crossplane
 
