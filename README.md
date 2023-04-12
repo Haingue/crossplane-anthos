@@ -43,6 +43,8 @@ gcloud projects add-iam-policy-binding --role="roles/iam.serviceAccountUser" ${G
 gcloud projects add-iam-policy-binding --role="roles/compute.instanceAdmin.v1" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
 # role for GKE cluster registration into an Anthos fleet
 gcloud projects add-iam-policy-binding --role="roles/gkehub.admin" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
+# role for Cloud SQL creation
+gcloud projects add-iam-policy-binding --role="roles/cloudsql.admin" ${GCP_PROJECT_ID} --member "serviceAccount:${GCP_SERVICE_ACCOUNT}"
 ```
 
 On génère une clé secrète pour ce *service account*.
@@ -84,6 +86,9 @@ On installe la CLI `CrossPlane` (il s'agit d'un plugin à `kubectl`).
 
 ```bash
 curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
+sudo mv kubectl-crossplane /home/ludovic_piot/.local/bin
+kubectl crossplane --help
+
 ```
 
 # 1er provisionning de ressource `GCP` avec `CrossPlane`
@@ -95,7 +100,7 @@ cd ${HOME}/crossplane-anthos/infrastructure/bootstrap
 
 # Installation des providers GCP
 kubectl apply -f ./providers.yaml
-kubectl get providers -w
+kubectl get providers
 
 # Installation de la configuration du provider GCP avec fourniture du secret
 kubectl apply -f ./provider-config.yaml
@@ -111,7 +116,7 @@ On provisionne un 1er *cluster* `GKE` que l'on enregistre à la `Anthos` *fleet*
 ```bash
 # Déploiement du cluster GKE et enregistrement dans la Anthos fleet
 kubectl apply -f gke-cluster-1.yaml
-kubectl get cluster.container.gcp.upbound.io -w
+kubectl get cluster.container.gcp.upbound.io
 
 gcloud container hub memberships list
 gcloud container fleet features list
